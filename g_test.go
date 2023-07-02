@@ -155,3 +155,63 @@ func TestCFG_Evaluate_palindrome(t *testing.T) {
 		}
 	}
 }
+
+func TestR_CNF(t *testing.T) {
+	S := cfg.Variable("S")
+	X := cfg.Variable("X")
+	Y := cfg.Variable("Y")
+	a := cfg.Terminal("a")
+	b := cfg.Terminal("b")
+	c := cfg.Terminal("c")
+	rules := cfg.R{
+		cfg.NewProduction(S, []cfg.Beta{a, X, b, X}),
+		cfg.NewProduction(X, []cfg.Beta{a, Y}),
+		cfg.NewProduction(X, []cfg.Beta{b, Y}),
+		cfg.NewProduction(X, []cfg.Beta{cfg.Epsilon}),
+		cfg.NewProduction(Y, []cfg.Beta{X}),
+		cfg.NewProduction(Y, []cfg.Beta{c}),
+	}
+	g, err := cfg.New(
+		cfg.V{S, X, Y},
+		cfg.Alphabet{a, b, c},
+		rules,
+		S,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cnf := g.CNF()
+	cnf.Sort()
+	T0 := cfg.Variable("T0")
+	T1 := cfg.Variable("T1")
+	T2 := cfg.Variable("T2")
+	V0 := cfg.Variable("V0")
+	V1 := cfg.Variable("V1")
+	V2 := cfg.Variable("V2")
+	expected := cfg.R{
+		cfg.NewProduction(S, []cfg.Beta{T0, T1}),
+		cfg.NewProduction(S, []cfg.Beta{T0, V0}),
+		cfg.NewProduction(S, []cfg.Beta{T0, V1}),
+		cfg.NewProduction(S, []cfg.Beta{T0, V2}),
+		cfg.NewProduction(T0, []cfg.Beta{a}),
+		cfg.NewProduction(T1, []cfg.Beta{b}),
+		cfg.NewProduction(T2, []cfg.Beta{c}),
+		cfg.NewProduction(V0, []cfg.Beta{X, T1}),
+		cfg.NewProduction(V1, []cfg.Beta{X, V2}),
+		cfg.NewProduction(V2, []cfg.Beta{T1, X}),
+		cfg.NewProduction(X, []cfg.Beta{T0}),
+		cfg.NewProduction(X, []cfg.Beta{T0, Y}),
+		cfg.NewProduction(X, []cfg.Beta{T1}),
+		cfg.NewProduction(X, []cfg.Beta{T1, Y}),
+		cfg.NewProduction(Y, []cfg.Beta{T0}),
+		cfg.NewProduction(Y, []cfg.Beta{T0, Y}),
+		cfg.NewProduction(Y, []cfg.Beta{T1}),
+		cfg.NewProduction(Y, []cfg.Beta{T1, Y}),
+		cfg.NewProduction(Y, []cfg.Beta{T2}),
+	}
+	for i, v := range cnf {
+		if !v.Equal(expected[i]) {
+			t.Errorf("expected %v, got %v", expected[i], v)
+		}
+	}
+}
