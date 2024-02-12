@@ -37,19 +37,11 @@ var (
 )
 
 func ExampleCFG() {
-	S := cfg.Variable("S")
-	a := cfg.Terminal("a")
-	b := cfg.Terminal("b")
-	g, _ := cfg.New(
-		[]cfg.Variable{S},
-		[]cfg.Terminal{a, b},
-		[]cfg.Production{
-			cfg.NewProduction(S, []cfg.Beta{a, S, a}),     // aSa
-			cfg.NewProduction(S, []cfg.Beta{b, S, b}),     // bSb
-			cfg.NewProduction(S, []cfg.Beta{cfg.Epsilon}), // ε
-		},
-		S,
-	)
+	g, _ := cfg.Parse(`
+		S → aSa
+		S → bSb
+		S → ε
+	`)
 
 	in := "aabbaa"
 	fmt.Println(g)
